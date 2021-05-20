@@ -1,4 +1,4 @@
-``#!/bin/zsh
+#!/bin/zsh
 
 # Specify a list of paths
 # case help/code from:
