@@ -13,9 +13,9 @@ if [ $# -gt 0 ]; then
 
     while [ "$1" != "" ]; do
         echo "Filepath: $1"
+        date
         cp $1 ~/Desktop/.temp.nosync/clear
-    jupyter-nbconvert --ExecutePreprocessor.timeout=1500 --to notebook --execute --inplace $1
-
+        jupyter-nbconvert --ExecutePreprocessor.timeout=3000 --to notebook --execute --inplace $1
         # Shift all the parameters down by one
         shift
     done
