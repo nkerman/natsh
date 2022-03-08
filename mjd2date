@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+# Taken from natpy.misc module
+from datetime import timedelta
+from datetime import datetime
+
+def from_mjd(specified_date = None, datetype = 'mjd'):
+    """
+    This might be to within +/- 1 day, I'm still not sure exactly how to deal with the noon/midnight thing...
+    """
+    if specified_date:
+        if datetype == 'mjd':
+            jd = specified_date + 2400001.
+        elif datetype == 'jd':
+            jd = specified_date
+
+        
+        ord_date = jd - 1721425
+        int_ord_days = int(ord_date)
+        dt_int = datetime.fromordinal(int_ord_days)
+        dec_ord_days = ord_date - int_ord_days
+        dt_dec = timedelta(0, (dec_ord_days *60.*60.*24.))
+        dt = dt_int + dt_dec
+        return dt, dec_ord_days
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument( "mjd", help="What modified Julian date (MJD; Numerical type) do you want to convert to a datetime?", type=float)
+    parser.add_argument("-f", "--format-print", help="How should you print to the CLI?(options: datetime/string/[both])", type=str)
+    args = parser.parse_args()
+    if args.mjd:
+        date = from_mjd(args.mjd)
+        fmtdate = date[0].strftime("%B %d, %Y - at - %H:%M:%S")
+        if args.format_print:
+            if args.format_print.lower() == "both":
+                print_string = f"###\n{date}\n{fmtdate}\n#####"
+            elif args.format_print.lower() == "datetime":
+                print_string = f"###\n{date}\n#####"
+            elif args.format_print.lower() == "string":
+                print_string = f"###\n{fmtdate}\n#####"
+        else:
+            print_string = f"###\n{date}\n{fmtdate}\n#####"
+        print(print_string)
+    else:
+        print("No date in MJD specified")
