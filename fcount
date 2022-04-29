@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ### Author: 
 # Nat Kerman <nkerman@stsci.edu>
@@ -8,7 +8,23 @@
 from pathlib import Path
 from os import getcwd
 # %%
-def count_files(dir_=None, files_only=False, dirs_only=False, verbosity=2, printlist=False):
+def endswith_boolean_check(file, ending):
+    """Check if has the correct file ending
+
+    Args:
+        file str or path object of path to file
+        ending (str): string to check if ending equals
+
+    Returns:
+        Boolean; True if the ending is correct
+    """
+    file = str(file)
+    len_end = len(ending)
+    file_ending = file[-len_end:]
+    return (file_ending == ending)
+# endswith_boolean_check(Path("../blah.fits"), "fits")
+# %%
+def count_files(dir_=None, files_only=False, dirs_only=False, verbosity=2, printlist=False, filetype=None):
     if dir_ == None:
         # Assume CWD
         dir_ = getcwd()
@@ -28,7 +44,10 @@ def count_files(dir_=None, files_only=False, dirs_only=False, verbosity=2, print
         print("Could not make a Path object from the directory passed. Error: \n",e__)
     if files_only:
         assert dirs_only == False, "Can't look for both files_only and dirs_only"
-        item_list = [file for file in dir_.iterdir() if file.is_file()]
+        if filetype:
+            item_list = [file for file in dir_.iterdir() if (file.is_file() and endswith_boolean_check(file,filetype))]
+        else:
+            item_list = [file for file in dir_.iterdir() if file.is_file()]
     elif dirs_only:
         assert files_only == False, "Can't look for both files_only and dirs_only"
         item_list = [dir for dir in dir_.iterdir() if dir.is_dir()]
@@ -39,13 +58,41 @@ def count_files(dir_=None, files_only=False, dirs_only=False, verbosity=2, print
     return len(item_list)
 # %%
 if __name__ == "__main__":
+    # """ Potential new click method"""
+    # import click
+    # @click.command()
+    # @click.option('--dir_', prompt='Count directories too?', help='Whether or not to count directories.',type=bool)
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("dir_", nargs="?", type=str, default=None)
+    # parser.add_argument("--files","-f", action="store_true", default=False)
+    # parser.add_argument("--dirs","-d", action="store_true", default=False)
+    # parser.add_argument("--verbosity","-v", action="store_true", default=False)
+    # parser.add_argument("--printlist","-l", action="store_true", default=False)
+    
+    # args = parser.parse_args()
+    
+    # if args.verbosity:
+    #     verb = 2
+    # else:
+    #     verb = 0
+    
+    # num_files = count_files(
+    #     dir_=args.dir_,
+    #     files_only=args.files,
+    #     dirs_only=args.dirs,
+    #     verbosity=verb,
+    #     printlist=args.printlist,
+    # )
+    # print("\033[95m\033[1m"+f"Number of items found:   {num_files}"+"\033[0m")
+    """ Stable argparse method"""
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("dir_", nargs="?", type=str, default=None)
-    parser.add_argument("--files","-f", action="store_true", default=False)
-    parser.add_argument("--dirs","-d", action="store_true", default=False)
-    parser.add_argument("--verbosity","-v", action="store_true", default=False)
-    parser.add_argument("--printlist","-l", action="store_true", default=False)
+    parser.add_argument("dir_", nargs="?", type=str, default=None, help="(String/Default=CWD) The directory we're searching in.")
+    parser.add_argument("--files","-f", action="store_true", default=False, help="(Boolean/Default=False) Count files only (no directories)")
+    parser.add_argument("--dirs","-d", action="store_true", default=False, help="(Boolean/Default=False) Count directories only (no files)")
+    parser.add_argument("--verbosity","-v", action="store_true", default=False, help="(Boolean/Default=False) Whether to verbosely print where we're searching")
+    parser.add_argument("--printlist","-l", action="store_true", default=False, help="(Boolean/Default=False) Whether to print all the counted items")
+    parser.add_argument("--file-ending","-e", default=None, help="Filetype to restrict to, i.e. '.jpg', '.fits', etc")
     
     args = parser.parse_args()
     
@@ -60,6 +107,7 @@ if __name__ == "__main__":
         dirs_only=args.dirs,
         verbosity=verb,
         printlist=args.printlist,
+        filetype=args.file_ending,
     )
     print("\033[95m\033[1m"+f"Number of items found:   {num_files}"+"\033[0m")
 # %%
