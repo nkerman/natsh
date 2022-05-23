@@ -45,6 +45,7 @@ if __name__ == "__main__":
     parser.add_argument("file", nargs=1, type=str, default=None, help="(String) The file we're getting info on.")
     parser.add_argument("--verbosity","-v", action="store_true", default=False, help="(Boolean/Default=False) Whether to verbosely print where we're finding")
     parser.add_argument("--additional","-a", help="Additional terms to get from the headers", nargs="+", type=str)
+    parser.add_argument("--conserve_case","-c", action="store_true", default=False, help="(Boolean/Default=False) Whether to stop the code from assuming all parameters should be all-caps.")
 
     args = parser.parse_args()
     print(f"file is: {args.file[0]}")
@@ -55,9 +56,12 @@ if __name__ == "__main__":
     if args.additional:
         if type(args.additional) ==str:
             search_list.append(args.additional)
-        elif type(args.additional) ==list:
+        elif type(args.additional) == list:
             for term in args.additional:
-                search_list.append(term)
+                if not args.conserve_case:
+                    search_list.append(term.upper())
+                elif args.conserve_case:
+                    search_list.append(term)
             
     param_dict = {}
     hdr0,hdr1 = get_headers(args.file[0])
