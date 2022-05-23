@@ -44,7 +44,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file", nargs=1, type=str, default=None, help="(String) The file we're getting info on.")
     parser.add_argument("--verbosity","-v", action="store_true", default=False, help="(Boolean/Default=False) Whether to verbosely print where we're finding")
-    parser.add_argument("--additional", help="Additional terms to get from the headers", nargs="+", type=str)
+    parser.add_argument("--additional","-a", help="Additional terms to get from the headers", nargs="+", type=str)
 
     args = parser.parse_args()
     print(f"file is: {args.file[0]}")
