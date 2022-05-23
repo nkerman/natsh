@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+### Author: 
+# Nat Kerman <nkerman@stsci.edu>
+### Updated: 
+# May 23, 2022
+# %%
+import enum
+from pathlib import Path
+from astropy.io.fits import getheader
+# %%
+search_list = [
+    "ROOTNAME",
+    "ASN_ID",
+    "EXPTIME",
+    "INSTRUME",
+    "OPT_ELEM",
+    "CENWAVE",
+]
+# %%
+def get_headers(filepath):
+    hdr0= getheader(filename=filepath, ext=0)
+    hdr1= getheader(filename=filepath, ext=1)
+    return hdr0, hdr1
+
+def search_headers(param, hdrs,verb=0):
+    param_val = {}
+    for i, hdr in enumerate(hdrs):
+        if param in hdr.keys():
+            if verb>1:
+                print(f"Found {param} in hdr {i} = {hdr[param]}")
+            param_val = hdr[param]
+            break
+    return param_val
+
+def report(param_dict):
+    print(f"{param_dict['ROOTNAME']} is a {param_dict['INSTRUME']} {param_dict['OPT_ELEM']}/{param_dict['CENWAVE']} exposure"+
+          f" as part of {param_dict['ASN_ID']}, of exposure time {param_dict['EXPTIME']} seconds.")
+
+# %%
+if __name__ == "__main__":
+    """ Stable argparse method"""
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("file", nargs=1, type=str, default=None, help="(String) The file we're getting info on.")
+    parser.add_argument("--verbosity","-v", action="store_true", default=False, help="(Boolean/Default=False) Whether to verbosely print where we're finding")
+    parser.add_argument("--additional", help="Additional terms to get from the headers", nargs="+", type=str)
+
+    args = parser.parse_args()
+    print(f"file is: {args.file[0]}")
+    if args.verbosity:
+        verb = 2
+    else:
+        verb = 0
+    if args.additional:
+        if type(args.additional) ==str:
+            search_list.append(args.additional)
+        elif type(args.additional) ==list:
+            for term in args.additional:
+                search_list.append(term)
+            
+    param_dict = {}
+    hdr0,hdr1 = get_headers(args.file[0])
+    for term in search_list:
+        param_dict[term] = search_headers(term, (hdr0,hdr1), verb)
+    report(param_dict)
+    print("----\n")
+    [print(item) for item in param_dict.items()]
+
+# %%
