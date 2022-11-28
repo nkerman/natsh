@@ -1,0 +1,68 @@
+#! /usr/bin/env python3
+"""
+utctrans:
+converts a UTC timestamp to a human readable date 
+
+### Author: 
+# Nat Kerman <Nathaniel.Kerman@lasp.colorado.edu>
+### Updated: 
+# Nov 28, 2022
+
+"""
+#%%
+from datetime import datetime
+
+
+def utctrans(utc_time, offset=0, verbose=True):
+    time_string = datetime.fromtimestamp(utc_time - offset).strftime(
+        "%Y-%m-%d at %H:%M:%S.%f"
+    )
+    if verbose:
+        print(
+            "\033[95m\033[1m" + time_string[:10] + "\033[0m" + #date \ 
+            " at " + \
+            "\033[94m\033[1m" + time_string[14:] + "\033[0m" # time
+        )
+    return time_string
+
+
+#%%
+if __name__ == "__main__":
+    # Stable argparse method
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "utc_time",
+        nargs="?",
+        type=float,
+        default=None,
+        help="The utc timestamp in utc_seconds. Defaults to current time.",
+    )
+    parser.add_argument(
+        "offset",
+        nargs="?",
+        type=float,
+        default=0,
+        help="The time to offset by in utc seconds (with subtraction, as: utc_time - offset).",
+    )
+    parser.add_argument(
+        "--verbosity",
+        "-v",
+        action="store_true",
+        default=True,
+        help="(Boolean/Default=False) Whether to verbosely print the value",
+    )
+
+    args = parser.parse_args()
+
+    if not args.utc_time:
+        args.utc_time = datetime.utcnow().timestamp()
+
+    response = utctrans(
+        utc_time=args.utc_time,
+        offset=args.offset,
+        verbose=args.verbosity,
+    )
+    # print("\033[95m\033[1m"+f"Number of items found:   {num_files}"+"\033[0m")
+# %%
