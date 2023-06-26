@@ -1,0 +1,50 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+import argparse
+# %%
+today_date = datetime.today()
+
+def get_day_of_year(date: datetime):
+    first_of_year = datetime(date.year, 1, 1)
+    day_of_year = (date - first_of_year).days + 1
+    return day_of_year
+
+def trad_output(date: datetime):
+    first_of_year = datetime(date.year, 1, 1)
+    delta = (date - first_of_year)
+    day_of_year = delta.days + 1
+    
+    hrs = delta.seconds // 3600
+    mins = (delta.seconds - hrs*3600) // 60
+    secs = int(delta.seconds - hrs*3600 - mins*60)
+    subsecs = int(1000 * (delta.seconds - hrs*3600 - mins*60 - secs))
+    return f"{date.year}/{day_of_year:03d}-{hrs:02d}:{mins:02d}:{secs:02d}.{subsecs:03d}"
+ 
+if __name__ == '__main__':
+    # use argparse to get an optional date from the command line in the format YYYY-MM-DD and a verbose flag
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--date", help="What date do you want to convert to a day of year?", type=str)
+    parser.add_argument("-v", "--verbose", help="Verbose output", action="store_true")
+    parser.add_argument("-t", "--trad_format", help="Format for use in TRaD tool?", action="store_true")
+    args = parser.parse_args()
+    
+        
+    if args.verbose:
+        print(f"Today is {today_date.strftime('%Y-%m-%d')}, day {get_day_of_year(today_date)} of the year.")
+
+    if args.date:
+        try:
+            date = datetime.strptime(args.date, "%Y-%m-%d")
+        except ValueError:
+            date = datetime.strptime(args.date, '%Y-%m-%dT%H:%M:%S')
+            
+        print(f"Date provided is {date.strftime('%Y-%m-%d')}, day {get_day_of_year(date)} of the year.")
+        if args.trad_format:
+            print(f"TRaD format: {trad_output(date)}")
+        
+    if (not args.date) and (not args.verbose):
+        print(f"No date provided. Assuming today:")
+        print(f"Today is {today_date.strftime('%Y-%m-%d')}, day {get_day_of_year(today_date)} of the year.")
+        if args.trad_format:
+            print(f"TRaD format: {trad_output(today_date)}")
