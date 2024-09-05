@@ -1,0 +1,55 @@
+#! /usr/bin/env python
+#%%
+import click
+
+import subprocess
+
+def write_to_clipboard(output):
+    # Credit to https://stackoverflow.com/questions/1825692/can-python-send-text-to-the-mac-clipboard
+    process = subprocess.Popen(
+        'pbcopy', env={'LANG': 'en_US.UTF-8'}, stdin=subprocess.PIPE)
+    process.communicate(output.encode('utf-8'))
+
+def convert_export_string(s):
+    lines = s.split("\n")
+    newlines = []
+    for line in lines:
+        if len(line)>1:
+            line = line[7:]
+            line = line.split("=")
+            line = f"environ[\"{line[0]}\"] = \"{line[1]}\""
+            newlines.append(line)
+    return "\n".join(newlines)
+
+
+@click.command()
+@click.argument('string')
+@click.option(
+    '--verbose', '-v', count=True,
+    help='Whether to print what we\'re outputting and copying',
+)
+@click.option(
+    '--asfile', '-w', is_flag=True,
+    help='Whether to convert to a python env file.',
+)
+@click.option(
+    '--filename', '-f',
+    help='Whether to overwrite the default filename for the python env file.',
+    default="./default_python_env_file.py"
+)
+def main(string, verbose, asfile, filename):
+    cs = convert_export_string(string)
+    if asfile:
+        with open(filename, "w") as file:
+            file.writelines(cs)
+    else:
+        write_to_clipboard(cs)
+
+    if verbose:
+        print(f"Wrote the following to clipboard or to {filename}:\n{cs}")
+
+# %%
+if __name__ == '__main__':
+    # Main function
+    main()
+# %%
