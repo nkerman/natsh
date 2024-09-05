@@ -1,0 +1,69 @@
+#! /usr/bin/env python3
+"""CLI util to convert Windows-style path to Mac-style path and vice versa.
+"""
+
+from pathlib import Path, PureWindowsPath
+
+bold_escape = "\033[1m"
+red_escape = "\u001b[31m"
+green_escape = "\u001b[32m"
+blue_escape = "\u001b[34m"
+end_escape = "\033[0m"
+
+if __name__ == "__main__":
+    # Take in arguments from the command line:
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", help="Path to convert", type=str, nargs="+")
+    parser.add_argument("verbose", help="Print the path", action="store_true")
+    args = parser.parse_args()
+
+    # If path is a list, clean and convert to a single string:
+    if len(args.path) > 1:
+        path = " ".join(args.path)
+        path = path.replace("...\\", "")
+        path = path.replace("...", "")
+        path = path.replace("../..", "")
+
+        # Special case replacements for frequently used paths - not generally applicable!!!
+        path = path.replace("lasp-store", "Volumes")
+
+    else:
+        path = args.path[0]
+
+    if args.verbose:
+        print(f"{bold_escape}Original path:{end_escape} \n\t{path}")
+
+    path = Path(PureWindowsPath(path).as_posix())
+
+    if args.verbose:
+        print(f"{bold_escape}Converted path:{end_escape} \n\t{path}")
+
+    # Version with whitespace trimmed:
+    path_components = str(path).split("/")
+    path_components = [component.strip() for component in path_components]
+    whitespace_trimmed_path = Path("/".join(path_components))
+
+    # Check if either is a file or a directory which exists:
+    if path.exists():
+        if path.is_dir():
+            path_description = f"{blue_escape}<< DIRECTORY{end_escape}"
+        elif path.is_file():
+            path_description = f"{green_escape}>> FILE{end_escape}"
+    else:
+        path_description = f"{red_escape}XX NONEXISTENT{end_escape}"
+
+    if whitespace_trimmed_path.exists():
+        if whitespace_trimmed_path.is_dir():
+            ws_path_description = f"{blue_escape}<< DIRECTORY{end_escape}"
+        elif whitespace_trimmed_path.is_file():
+            ws_path_description = f"{green_escape}>> FILE{end_escape}"
+    else:
+        ws_path_description = f"{red_escape}XX NONEXISTENT{end_escape}"
+
+    print(
+        "\n\n"
+        f"{bold_escape}Converted path:{end_escape} \n\t{path}\n\t\t{path_description}\n\n"
+        f"{bold_escape}Converted with whitespace trimmed:{end_escape} "
+        f"\n\t{whitespace_trimmed_path}\n\t\t{ws_path_description}"
+    )
