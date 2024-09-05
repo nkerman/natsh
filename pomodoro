@@ -1,0 +1,87 @@
+#! /usr/bin/env python
+
+"""Simple Pomodoro timer with/without a GUI"""
+
+from datetime import datetime
+from tqdm import tqdm
+from time import sleep
+import argparse
+
+# Read in required arguments and parse as needed
+# Accepts a single mandatory argument, the time at which the timer should end
+# Also accepts flag (-q) to run silently
+
+# Acceptable time formats:
+# 1. HH.MM.SS (hours, minutes, seconds) ('.' can also be ':')
+# 2. Number of minutes (can be a float or int)
+
+time_help = """Time for which the timer should run.
+Can be in the format `tHH.MM.SS` (hours, minutes, seconds) or a strict number of minutes.
+The separator can be either '.' or ':'.
+
+E.g.
+`pomodoro 25` will run the timer for 25 minutes
+`pomodoro t1.23.45` will run the timer for 1 hour, 23 minutes, and 45 seconds
+"""
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("time", help=time_help, type=str, nargs=1)
+    parser.add_argument(
+        "-q", "--quiet", help="Run the timer silently", action="store_true")
+    parser.add_argument(
+        "-n", "--nonverbose", help="Run the timer silently in terms of text output", action="store_true")
+    parser.add_argument(
+        "-s", "--timestep", help="Time step for the timer in seconds", type=float, default=1)
+    args = parser.parse_args()
+
+    time_str = args.time[0]
+
+    if time_str[0] == "t":
+        time_str.replace(":", ".")
+        time_str = time_str[1:]
+        time_str = time_str.split(".")
+
+        if len(time_str) != 3:
+            raise ValueError("Time must be in the format `tHH.MM.SS`")
+
+        hours = float(time_str[0])
+        minutes = float(time_str[1])
+        seconds = float(time_str[2])
+
+        t_sec = hours * 3600 + minutes * 60 + seconds
+
+        if not args.nonverbose:
+            print(
+                f"Running timer for {hours} hours, {minutes} minutes, and {seconds} seconds.")
+
+    else:
+        # Assume in minutes
+        t_sec = float(time_str) * 60
+        hours = int(t_sec // (60 * 60))
+        minutes = int((t_sec - (60 * 60 * hours)) // 60)
+        seconds = t_sec - (60 * 60 * hours) - (60 * minutes)
+
+        if not args.nonverbose:
+            print(
+                f"Running timer for {hours} hours, {minutes} minutes, and {seconds:.3f} seconds.")
+
+    step_length_sec = args.timestep
+    num_steps = int(t_sec // step_length_sec)
+    # Force there to be at least 1 time step
+    if num_steps == 0:
+        num_steps = 1
+
+    step_length_unrounded = t_sec / num_steps
+
+    start_time = datetime.now()
+    for step in tqdm(range(num_steps), desc="Pomodoro", unit="step", disable=args.nonverbose):
+        sleep(step_length_unrounded)
+
+    if not args.quiet:
+        end_time = datetime.now()
+        print(f"Timer ran for {end_time - start_time}")
+        from os import system
+
+        print('DING!')
+        system('afplay /System/Library/Sounds/Glass.aiff')
