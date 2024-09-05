@@ -1,0 +1,75 @@
+#! /usr/bin/env python3
+# netcdf_inform.py
+
+import xarray as xr
+import logging
+from pathlib import Path
+from sys import stdout
+
+# Set up logging
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+# show logger info in console
+handler = logging.StreamHandler(stdout)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+def report_on_netcdf(filename: str) -> str:
+    report = ""
+    fpath_abs = Path(filename).absolute()
+    report += f"########################################\nReporting on: {fpath_abs}\n"
+    report += f"########################################\n\n"
+
+
+    ds = xr.open_dataset(filename)
+
+    # report on any attributes of the dataset
+    report += f"Attributes (Dataset):\n"
+    for attr_name, attr_value in ds.attrs.items():
+        report += f"{attr_name}:\t{attr_value}\n"
+
+    for name, da in ds.data_vars.items():
+        report += f"\n###\nDATA ARRAY VARIABLE:\t{name}\n###\n\n"
+        report += f"Dimensions:\t{da.dims}\n"
+        report += f"Shape:\t{da.shape}\n"
+        report += f"Size:\t{da.size}\n"
+        report += f"Data type:\t{da.dtype}\n\n\n"
+        report += f"Attributes (DataArray {name}):\n"
+        for attr_name, attr_value in da.attrs.items():
+            report += f"{attr_name}:\t{attr_value}\n"
+        report += "############################################\n############################################\n"
+    return report
+
+
+if __name__ == "__main__":
+    # Create argument parser to get the path to the netcdf file (mandatory), a verbose flag (binary),
+    # an output log file path (optional str with default)
+
+    import argparse
+    # Create the parser
+    parser = argparse.ArgumentParser(description='Inform about a netcdf file.')
+
+    # Add the arguments
+    parser.add_argument('netcdf_path', metavar='path_to_netcdf', type=str,
+                        help='the path to the netcdf file')
+    parser.add_argument('--verbose', "-v", action='store_true',
+                        help='enable verbose mode (print description to console)')
+    parser.add_argument('--log', '-l', type=str, default="None", metavar="path_to_logfile",
+                        help='the path to the output log file. If not specified, no log file will be created.')
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    logger.info(f"NetCDF Path: {args.netcdf_path}")
+
+
+    report = report_on_netcdf(args.netcdf_path)
+
+    if args.verbose:
+        logger.info(report)
+
+    if args.log != "None":
+        logger.info(f"Saving to output log file: {args.log}")
+        # Save the report to the log file
+        with open(args.log, "w") as f:
+            f.write(report)
