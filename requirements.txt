@@ -1,0 +1,6 @@
+# requirements.txt
+astropy
+click
+xarray
+numpy
+tqdm
