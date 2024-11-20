@@ -1,0 +1,94 @@
+#! /usr/bin/env python3
+"""cdfinfo"""
+
+# %%
+import cdflib
+bold_escape = "\033[1m"
+end_escape = "\033[0m"
+
+# %%
+
+
+def build_str_from_list(list_: list[str | dict], str_line_length: int = 100):
+    """Build a string from a list of strings"""
+    if not list_:
+        return "[]"
+    if isinstance(list_[0], dict):
+        # create a new list of strings from the dictionary
+        list_ = [
+            f"{bold_escape}{list(item.keys())[0]}{end_escape}: scope={list(item.values())[0]}"
+            for item in list_
+        ]
+    line_length_counter = 0
+    str_ = "\t["
+    for item in list_:
+        if len(item) >= str_line_length:
+            raise ValueError(f"item name is too long: {item}")
+        if line_length_counter + len(item) >= str_line_length:
+            str_ += "\n\t "
+            line_length_counter = 0
+        str_ += f"{item}, "
+        line_length_counter += len(item) + 2
+    str_ += "]"
+    return str_
+
+
+# %%
+
+
+def cdf_inform(file: str):
+    """Get the information of a CDF file"""
+    cdf_object = cdflib.CDF(file)
+    cdf_info = cdf_object.cdf_info()
+
+    zvar_groups_str = build_str_from_list(cdf_info.zVariables)
+    rvar_groups_str = build_str_from_list(cdf_info.rVariables)
+    attributes_str = build_str_from_list(cdf_info.Attributes)
+
+    print(
+        f"The CDF zVariables are (zvar): \n{zvar_groups_str}\n"
+        f"The CDF rVariables are (rvar): \n{rvar_groups_str}\n"
+        f"\nThe CDF global attributes are: \n{attributes_str}\n"
+    )
+
+    print("\n\nThe CDF variables are:\n----------------\n")
+    combined_vars = cdf_info.zVariables + cdf_info.rVariables
+    for var in combined_vars:
+
+        # Find any DEPEND
+        var_attrs = cdf_object.varattsget(var)
+        depend_vars = [
+            f"{varkey}: {varval}"
+            for varkey, varval in var_attrs.items()
+            if "DEPEND" in varkey
+        ]
+
+        print(
+            f"\n\n'{bold_escape}{var}{end_escape}' has shape: {cdf_object[var].shape}, dtype: {cdf_object[var].dtype}"
+            f"\n\tDEPENDS: {depend_vars}"
+        )
+
+    return cdf_info
+
+
+if __name__ == "__main__":
+    """Stable argparse method"""
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "file",
+        nargs=1,
+        type=str,
+        default=None,
+        help="(String) The file we're getting info on.",
+    )
+
+    args = parser.parse_args()
+    assert args.file[0].lower().endswith(".cdf"), "File must be a CDF file."
+    print(f"filepath: {args.file[0]}\n------------\n")
+
+    cdf_inform(args.file[0])
+
+
+# %%
