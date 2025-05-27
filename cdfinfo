@@ -1,6 +1,5 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 """cdfinfo"""
-
 # %%
 import cdflib
 bold_escape = "\033[1m"

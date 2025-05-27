@@ -3,6 +3,7 @@
 """
 
 from pathlib import Path, PureWindowsPath
+import pyperclip
 
 bold_escape = "\033[1m"
 red_escape = "\u001b[31m"
@@ -15,7 +16,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("path", help="Path to convert", type=str, nargs="+")
-    parser.add_argument("verbose", help="Print the path", action="store_true")
+    parser.add_argument("--silent", "-s", help="Suppress printing of the paths", action="store_true")
     args = parser.parse_args()
 
     # If path is a list, clean and convert to a single string:
@@ -31,13 +32,10 @@ if __name__ == "__main__":
     else:
         path = args.path[0]
 
-    if args.verbose:
+    if not args.silent:
         print(f"{bold_escape}Original path:{end_escape} \n\t{path}")
 
     path = Path(PureWindowsPath(path).as_posix())
-
-    if args.verbose:
-        print(f"{bold_escape}Converted path:{end_escape} \n\t{path}")
 
     # Version with whitespace trimmed:
     path_components = str(path).split("/")
@@ -46,6 +44,10 @@ if __name__ == "__main__":
 
     # Check if either is a file or a directory which exists:
     if path.exists():
+
+        # Save the path to the clipboard if the file exists:
+        pyperclip.copy(f"'{str(path)}'")
+
         if path.is_dir():
             path_description = f"{blue_escape}<< DIRECTORY{end_escape}"
         elif path.is_file():
@@ -54,6 +56,10 @@ if __name__ == "__main__":
         path_description = f"{red_escape}XX NONEXISTENT{end_escape}"
 
     if whitespace_trimmed_path.exists():
+
+        # Prefer the trimmed path to the clipboard if the file exists:
+        pyperclip.copy(f"'{str(whitespace_trimmed_path)}'")
+
         if whitespace_trimmed_path.is_dir():
             ws_path_description = f"{blue_escape}<< DIRECTORY{end_escape}"
         elif whitespace_trimmed_path.is_file():
@@ -61,9 +67,10 @@ if __name__ == "__main__":
     else:
         ws_path_description = f"{red_escape}XX NONEXISTENT{end_escape}"
 
-    print(
-        "\n\n"
-        f"{bold_escape}Converted path:{end_escape} \n\t{path}\n\t\t{path_description}\n\n"
-        f"{bold_escape}Converted with whitespace trimmed:{end_escape} "
-        f"\n\t{whitespace_trimmed_path}\n\t\t{ws_path_description}"
-    )
+    if not args.silent:
+        print(
+            "\n"
+            f"{bold_escape}Converted path:{end_escape} \n\t{path}\n\t\t{path_description}\n\n"
+            f"{bold_escape}Converted with whitespace trimmed:{end_escape} "
+            f"\n\t{whitespace_trimmed_path}\n\t\t{ws_path_description}"
+        )
